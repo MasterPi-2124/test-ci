@@ -21,37 +21,27 @@ jobs:
 
       - name: Extract issue details and label
         id: extract-labels
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const issue = context.issue;
-            const issueBody = context.payload.issue.body;
+        run: |
+          echo "Extracting labels from issue"
+          labels=$(jq -r '.issue.body' "$GITHUB_EVENT_PATH" | awk '/### Target Milestone/{getline; print}' | sed 's/^ *//;s/ *$//')
+          epic=$(jq -r '.issue.body' "$GITHUB_EVENT_PATH" | awk '/### Epic/{getline; print}' | sed 's/^ *//;s/ *$//')
+          labels_array=""
+          if [ -n "$labels" ]; then
+            labels_array="milestone-${labels,,}"
+          fi
+          if [ -n "$epic" ]; then
+            if [ -n "$labels_array" ]; then
+              labels_array="$labels_array,epic-${epic,,}"
+            else
+              labels_array="epic-${epic,,}"
+            fi
+          fi
+          echo "labels=$labels_array" >> $GITHUB_ENV
 
-            // Function to extract specific fields from the issue body
-            function extractField(field) {
-              const regex = new RegExp(`### ${field}\\n\\n(.*)\\n`, 'i');
-              const match = issueBody.match(regex);
-              return match ? match[1].trim() : null;
-            }
-
-            const targetMilestone = extractField('Target Milestone');
-            const epic = extractField('Epic');
-            const labels = [];
-
-            if (targetMilestone) {
-              labels.push(`milestone-${targetMilestone.toLowerCase().replace(/\s+/g, '-')}`);
-            }
-
-            if (epic) {
-              labels.push(`epic-${epic.toLowerCase().replace(/\s+/g, '-')}`);
-            }
-
-            // Set output
-            core.setOutput("labels", labels.join(','));
-
-      - run: gh issue edit "$NUMBER" --add-label "$LABELS"
+      - name: Add labels
+        run: gh issue edit "$NUMBER" --add-label "$LABELS"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
           NUMBER: ${{ github.event.issue.number }}
-          LABELS:  ${{ steps.extract-labels.outputs.labels }}
+          LABELS:  ${{ env.labels }}
