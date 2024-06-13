@@ -23,26 +23,27 @@ jobs:
         id: extract-labels
         run: |
           echo "Extracting labels from issue"
-          labels=$(jq -r '.issue.body' "$GITHUB_EVENT_PATH" | awk '/### Target Milestone/{getline; print}' | sed 's/^ *//;s/ *$//')
-          epic=$(jq -r '.issue.body' "$GITHUB_EVENT_PATH" | awk '/### Epic/{getline; print}' | sed 's/^ *//;s/ *$//')
-          labels_array=""
-          if [ -n "$labels" ]; then
-            labels_array="milestone-${labels,,}"
+          target=$(echo "${{ github.event.issue.body }}" | awk '/### Target Milestone/{getline; getline; print}' | sed 's/^ *//;s/ *$//')
+          epic=$(echo "${{ github.event.issue.body }}" | awk '/### Epic/{getline; getline; print}' | sed 's/^ *//;s/ *$//')
+          labels=""
+          if [ -n "$target" ]; then
+            labels="${target,,}"
           fi
           if [ -n "$epic" ]; then
-            if [ -n "$labels_array" ]; then
-              labels_array="$labels_array,epic-${epic,,}"
+            if [ -n "$labels" ]; then
+              labels="$labels,${epic,,}"
             else
-              labels_array="epic-${epic,,}"
+              labels="${epic,,}"
             fi
           fi
-          echo $labels_array
-          echo "labels=$labels_array" >> $GITHUB_ENV
+          echo $labels
+          echo "labels=$labels" >> $GITHUB_ENV
 
-      # - name: Add labels
-      #   run: gh issue edit "$NUMBER" --add-label "$LABELS"
-      #   env:
-      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     GH_REPO: ${{ github.repository }}
-      #     NUMBER: ${{ github.event.issue.number }}
-      #     LABELS:  ${{ env.labels }}
+      - name: Add labels
+        if: env.labels != ''
+        run: gh issue edit "$NUMBER" --add-label "$LABELS"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.issue.number }}
+          LABELS:  ${{ env.labels }}
