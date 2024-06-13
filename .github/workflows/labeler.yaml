@@ -13,11 +13,14 @@ permissions:
 jobs:
   label-issue:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Extract issue details and label
+        id: extract-labels
         uses: actions/github-script@v6
         with:
           script: |
@@ -43,12 +46,12 @@ jobs:
               labels.push(`epic-${epic.toLowerCase().replace(/\s+/g, '-')}`);
             }
 
-            // Add labels to the issue
-            if (labels.length > 0) {
-              await github.issues.addLabels({
-                ...issue,
-                labels: labels
-              });
-            } else {
-              console.log('No labels to add');
-            }
+            // Set output
+            core.setOutput("labels", labels.join(','));
+
+      - run: gh issue edit "$NUMBER" --add-label "$LABELS"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.issue.number }}
+          LABELS:  ${{ steps.extract-labels.outputs.labels }}
