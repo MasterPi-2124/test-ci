@@ -1,0 +1,55 @@
+name: Issue Labeler
+
+on:
+  issues:
+    types:
+      - opened
+      - edited
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  label-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract issue details and label
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const issue = context.issue;
+            const issueBody = context.payload.issue.body;
+
+            // Function to extract specific fields from the issue body
+            function extractField(field) {
+              const regex = new RegExp(`${field}:\\s*(.*)`, 'i');
+              const match = issueBody.match(regex);
+              return match ? match[1].trim() : null;
+            }
+
+            const targetMilestones = extractField('target milestones');
+            const epic = extractField('epic');
+            const labels = [];
+
+            if (targetMilestones) {
+              labels.push(`milestone-${targetMilestones.toLowerCase().replace(/\s+/g, '-')}`);
+            }
+
+            if (epic) {
+              labels.push(`epic-${epic.toLowerCase().replace(/\s+/g, '-')}`);
+            }
+
+            // Add labels to the issue
+            if (labels.length > 0) {
+              await github.issues.addLabels({
+                ...issue,
+                labels: labels
+              });
+            } else {
+              console.log('No labels to add');
+            }
+
