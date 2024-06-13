@@ -26,7 +26,7 @@ jobs:
           target=$(echo "${{ github.event.issue.body }}" | awk '/### Target Milestone/{getline; getline; print}' | sed 's/^ *//;s/ *$//')
           epic=$(echo "${{ github.event.issue.body }}" | awk '/### Epic/{getline; getline; print}' | sed 's/^ *//;s/ *$//')
           target=$(echo "$target" | tr -d '\n')
-          epic=$(echo "$EPIC" | tr -d '\n')
+          epic=$(echo "$epic" | tr -d '\n')
           labels=""
           if [ -n "$target" ]; then
             labels="${target,,}"
