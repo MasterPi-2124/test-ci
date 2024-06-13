@@ -34,18 +34,10 @@ jobs:
 
           echo $target
           echo $epic
+          echo "ahihi"
+          echo "fahihi"
 
-          labels=""
-          if [ -n "$target" ]; then
-            labels="${target,,}"
-          fi
-          if [ -n "$epic" ]; then
-            if [ -n "$labels" ]; then
-              labels="$labels,${epic,,}"
-            else
-              labels="${epic,,}"
-            fi
-          fi
+          labels="${target},${epic}"
           echo $labels
           echo "labels=$labels" >> $GITHUB_ENV
 
