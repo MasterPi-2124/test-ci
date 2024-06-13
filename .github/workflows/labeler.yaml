@@ -23,21 +23,12 @@ jobs:
         id: extract-labels
         run: |
           echo "Extracting labels from issue"
-          target=$(echo "${{ github.event.issue.body }}" | awk '/### Target Milestone/{getline; getline; print}' | sed 's/^ *//;s/ *$//')
-          epic=$(echo "${{ github.event.issue.body }}" | awk '/### Epic/{getline; getline; print}' | sed 's/^ *//;s/ *$//')
-
-          echo $target
-          echo $epic
-
-          target=$(printf "%s" "$target" | tr -d '\n')
-          epic=$(printf "%s" "$epic" | tr -d '\n')
-
-          echo $target
-          echo $epic
-          echo "ahihi"
-          echo "fahihi"
+          target=$(echo "${{ github.event.issue.body }}" | awk '/### Target Milestone/{getline; getline; print}' | tr -d '\n' | sed 's/^ *//;s/ *$//')
+          epic=$(echo "${{ github.event.issue.body }}" | awk '/### Epic/{getline; getline; print}' | tr -d '\n' | sed 's/^ *//;s/ *$//')
 
           labels="${target},${epic}"
+          echo $labels
+          labels=$(echo "$labels" | tr -d '\n')
           echo $labels
           echo "labels=$labels" >> $GITHUB_ENV
 
