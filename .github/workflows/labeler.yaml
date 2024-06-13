@@ -28,9 +28,13 @@ jobs:
 
           echo $target
           echo $epic
-          
-          target=$(echo "$target" | tr -d '\n')
-          epic=$(echo "$epic" | tr -d '\n')
+
+          target=$(printf "%s" "$target" | tr -d '\n')
+          epic=$(printf "%s" "$epic" | tr -d '\n')
+
+          echo $target
+          echo $epic
+
           labels=""
           if [ -n "$target" ]; then
             labels="${target,,}"
