@@ -13,7 +13,7 @@ jobs:
       - name: Check if a checkbox was checked
         id: check_checkbox
         run: |
-          checkbox=$(echo "${{ github.event.issue.body }}" | awk '/### Live Test/{getline; getline; print}' | tr -d '\n' | grep -q '^\- \[x\] Yes$' && echo "y" || echo "n")
+          checkbox=$(echo "${{ github.event.issue.body }}" | awk '/### Live Test/{getline; getline; print}' | tr -d '\n' | grep -q '^\- \[X\] Yes$' && echo "y" || echo "n")
 
           echo $checkbox
           if [[ "$checkbox" = "y" ]]; then
