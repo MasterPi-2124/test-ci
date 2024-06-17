@@ -1,0 +1,38 @@
+name: Create Issue on Checkbox Checked
+
+on:
+    issues:
+        types:
+          - opened
+          - edited
+jobs:
+  create_e2e_live_issue:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check if a checkbox was checked
+        id: check_checkbox
+        run: |
+          CHECKBOX_PATTERN="\- \[x\]|\* \[x\]" # This matches checkboxes that are checked
+          checkbox=$(echo "${{ github.event.issue.body }}" | awk '/### Live Test/{getline; getline; print}' | tr -d '\n' | sed 's/^ *//;s/ *$//')
+          if [[ "${{ github.event.comment.body }}" =~ $CHECKBOX_PATTERN ]]; then
+            echo "::set-output name=checked::true"
+          else
+            echo "::set-output name=checked::false"
+          fi
+
+      - name: Create a new issue
+        if: steps.check_checkbox.outputs.checked == 'true'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issueTitle = 'New Issue Created from Checkbox';
+            const issueBody = `An issue was automatically created because a checkbox was checked in [this comment](${context.payload.comment.html_url}).`;
+            const newIssue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: issueTitle,
+              body: issueBody,
+            });
+            core.setOutput('issue_number', newIssue.data.number);
