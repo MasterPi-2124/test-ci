@@ -14,7 +14,7 @@ jobs:
         id: check_checkbox
         run: |
           checkbox=$(echo "${{ github.event.issue.body }}" | awk '/### Live Test/{getline; getline; print}' | tr -d '\n' | grep -q '^\- \[x\] Yes$' && echo "y" || echo "n")
-          if [[ checkbox == 'y' ]]; then
+          if [[ "$checkbox" = "y" ]]; then
             echo "::set-output name=checked::true"
           else
             echo "::set-output name=checked::false"
